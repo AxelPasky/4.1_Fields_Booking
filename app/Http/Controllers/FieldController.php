@@ -12,7 +12,12 @@ class FieldController extends Controller
      */
     public function index()
     {
-        //
+        $fields = Field::all(); // Recupera tutti i record dalla tabella 'fields'
+        // In futuro, potresti voler aggiungere paginazione qui, es: Field::paginate(10);
+
+        return view('fields.index', ['fields' => $fields]);
+        // Passa la variabile $fields alla vista 'fields.index'
+        // La vista si aspetterà una variabile chiamata 'fields'
     }
 
     /**
