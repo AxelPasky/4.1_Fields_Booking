@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Field;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Import the Auth facade
 
 class FieldController extends Controller
 {
@@ -12,12 +13,8 @@ class FieldController extends Controller
      */
     public function index()
     {
-        $fields = Field::all(); // Recupera tutti i record dalla tabella 'fields'
-        // In futuro, potresti voler aggiungere paginazione qui, es: Field::paginate(10);
-
-        return view('fields.index', ['fields' => $fields]);
-        // Passa la variabile $fields alla vista 'fields.index'
-        // La vista si aspetterà una variabile chiamata 'fields'
+        $fields = Field::all();
+        return view('fields.index', compact('fields'));
     }
 
     /**
@@ -25,10 +22,9 @@ class FieldController extends Controller
      */
     public function create()
     {
-        if (!auth()->user() || !auth()->user()->is_admin){
-            abort(403,'Azione non autorizzata');
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
         }
-
         return view('fields.create');
     }
 
@@ -37,26 +33,26 @@ class FieldController extends Controller
      */
     public function store(Request $request)
     {
-        // Controllo per l'amministratore
-        if (!auth()->user() || !auth()->user()->is_admin) {
-            abort(403, 'Azione non autorizzata.');
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
         }
 
-        // Validazione dei dati
         $validatedData = $request->validate([
-            'name' => 'required|string|max:100',
-            'type' => 'required|string|in:tennis,padel,calcio,basket', // Assicurati che i valori corrispondano all'ENUM
-            'location' => 'nullable|string|max:255',
-            'price_per_hour' => 'required|numeric|min:0',
-            'image' => 'nullable|string|max:255', // Per ora, validiamo solo come stringa
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'image_path' => 'nullable|string|max:255', // Temporary string
+            'hourly_rate' => 'required|numeric|min:0',
+            'is_available' => 'sometimes|boolean',
         ]);
 
-        // Creazione del nuovo campo
+        // If 'is_available' is not present in the request, set it to false (or 0)
+        $validatedData['is_available'] = $request->has('is_available');
+
+
         Field::create($validatedData);
 
-        // Reindirizzamento alla pagina di elenco con un messaggio di successo
-        return redirect()->route('fields.index')
-                         ->with('success', 'Campo sportivo creato con successo!');
+        return redirect()->route('fields.index')->with('success', 'Field created successfully!');
     }
 
     /**
@@ -64,7 +60,7 @@ class FieldController extends Controller
      */
     public function show(Field $field)
     {
-        //
+        return view('fields.show', compact('field'));
     }
 
     /**
@@ -72,7 +68,10 @@ class FieldController extends Controller
      */
     public function edit(Field $field)
     {
-        //
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+        return view('fields.edit', compact('field'));
     }
 
     /**
@@ -80,7 +79,26 @@ class FieldController extends Controller
      */
     public function update(Request $request, Field $field)
     {
-        //
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'image_path' => 'nullable|string|max:255', // Temporary string
+            'hourly_rate' => 'required|numeric|min:0',
+            'is_available' => 'sometimes|boolean',
+        ]);
+
+        // If 'is_available' is not present in the request, set it to false (or 0)
+        // For checkboxes, if they are not sent in the request, it means they are unchecked (false).
+        $validatedData['is_available'] = $request->has('is_available');
+
+        $field->update($validatedData);
+
+        return redirect()->route('fields.show', $field)->with('success', 'Field updated successfully!');
     }
 
     /**
