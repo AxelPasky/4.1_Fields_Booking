@@ -37,7 +37,26 @@ class FieldController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Controllo per l'amministratore
+        if (!auth()->user() || !auth()->user()->is_admin) {
+            abort(403, 'Azione non autorizzata.');
+        }
+
+        // Validazione dei dati
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:100',
+            'type' => 'required|string|in:tennis,padel,calcio,basket', // Assicurati che i valori corrispondano all'ENUM
+            'location' => 'nullable|string|max:255',
+            'price_per_hour' => 'required|numeric|min:0',
+            'image' => 'nullable|string|max:255', // Per ora, validiamo solo come stringa
+        ]);
+
+        // Creazione del nuovo campo
+        Field::create($validatedData);
+
+        // Reindirizzamento alla pagina di elenco con un messaggio di successo
+        return redirect()->route('fields.index')
+                         ->with('success', 'Campo sportivo creato con successo!');
     }
 
     /**
