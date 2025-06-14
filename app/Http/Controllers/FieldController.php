@@ -25,7 +25,11 @@ class FieldController extends Controller
      */
     public function create()
     {
-        //
+        if (!auth()->user() || !auth()->user()->is_admin){
+            abort(403,'Azione non autorizzata');
+        }
+
+        return view('fields.create');
     }
 
     /**
