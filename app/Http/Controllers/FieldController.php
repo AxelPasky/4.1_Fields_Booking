@@ -88,7 +88,7 @@ class FieldController extends Controller
             'type' => 'required|string|max:100',
             'description' => 'nullable|string',
             'image_path' => 'nullable|string|max:255', // Temporary string
-            'hourly_rate' => 'required|numeric|min:0',
+            'price_per_hour' => 'required|numeric|min:0',
             'is_available' => 'sometimes|boolean',
         ]);
 
