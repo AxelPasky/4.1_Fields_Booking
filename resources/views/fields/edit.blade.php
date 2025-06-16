@@ -56,8 +56,8 @@
 
                         <!-- Hourly Rate -->
                         <div class="mt-4">
-                            <label for="hourly_rate" class="block font-medium text-sm text-gray-700">{{ __('Hourly Rate (€)') }}</label>
-                            <input id="hourly_rate" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="number" name="hourly_rate" value="{{ old('hourly_rate', $field->hourly_rate) }}" required step="0.01" min="0" />
+                            <label for="price_per_hour" class="block font-medium text-sm text-gray-700">{{ __('Price per Hour (€)') }}</label>
+                            <input id="price_per_hour" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="number" name="price_per_hour" value="{{ old('price_per_hour', $field->price_per_hour) }}" required step="0.01" min="0" />
                         </div>
 
                         <!-- Is Available -->

@@ -42,7 +42,7 @@ class FieldController extends Controller
             'type' => 'required|string|max:100',
             'description' => 'nullable|string',
             'image_path' => 'nullable|string|max:255', // Temporary string
-            'hourly_rate' => 'required|numeric|min:0',
+            'price_per_hour' => 'required|numeric|min:0',
             'is_available' => 'sometimes|boolean',
         ]);
 
@@ -106,6 +106,17 @@ class FieldController extends Controller
      */
     public function destroy(Field $field)
     {
-        //
+        if (!Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Optional: Add logic here to check for related bookings before deleting a field.
+        // For example, prevent deletion if there are active or future bookings for this field,
+        // or delete/archive related bookings.
+        // For now, we'll proceed with a simple deletion.
+
+        $field->delete();
+
+        return redirect()->route('fields.index')->with('success', 'Field deleted successfully!');
     }
 }

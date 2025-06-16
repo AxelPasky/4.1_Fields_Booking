@@ -109,7 +109,16 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
-        //
+        // Authorize: only the user who made the booking or an admin can view it.
+        if (Auth::id() !== $booking->user_id && !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        // Eager load related models if you haven't already in the route model binding
+        // or if you need them specifically here.
+        $booking->load(['user', 'field']);
+
+        return view('bookings.show', compact('booking'));
     }
 
     /**

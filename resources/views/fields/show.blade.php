@@ -14,7 +14,7 @@
                     <p class="mt-1 text-sm text-gray-600"><strong>{{ __('Type:') }}</strong> {{ $field->type }}</p>
                     <p class="mt-1 text-sm text-gray-600"><strong>{{ __('Description:') }}</strong> {{ $field->description ?: 'N/A' }}</p>
                     <p class="mt-1 text-sm text-gray-600"><strong>{{ __('Image (path):') }}</strong> {{ $field->image_path ?: 'N/A' }}</p>
-                    <p class="mt-1 text-sm text-gray-600"><strong>{{ __('Hourly Rate:') }}</strong> €{{ number_format($field->hourly_rate, 2, ',', '.') }}</p>
+                    <p class="mt-1 text-sm text-gray-600"><strong>{{ __('Price per Hour:') }}</strong> €{{ number_format($field->price_per_hour, 2, ',', '.') }}</p>
                     <p class="mt-1 text-sm text-gray-600"><strong>{{ __('Available:') }}</strong> {{ $field->is_available ? __('Yes') : __('No') }}</p>
 
                     <div class="mt-6">
