@@ -51,24 +51,23 @@ class BookingController extends Controller
             'booking_date' => 'required|date|after_or_equal:today',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            // We will add more complex validation for booking conflicts later
         ], [
             'field_id.exists' => 'The selected field is not available or does not exist.',
             'booking_date.after_or_equal' => 'The booking date cannot be in the past.',
             'end_time.after' => 'The end time must be after the start time.'
         ]);
 
-        // Basic check for booking conflicts (can be expanded)
+        $bookingStartDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['start_time']);
+        $bookingEndDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['end_time']);
+
         $conflict = Booking::where('field_id', $validatedData['field_id'])
-            ->where('booking_date', $validatedData['booking_date'])
-            ->where(function ($query) use ($validatedData) {
-                $query->where(function ($q) use ($validatedData) {
-                    // New booking starts during an existing booking
-                    $q->where('start_time', '<', $validatedData['end_time'])
-                      ->where('end_time', ' > ', $validatedData['start_time']);
+            ->where(function ($query) use ($bookingStartDateTime, $bookingEndDateTime) {
+                $query->where(function ($q) use ($bookingStartDateTime, $bookingEndDateTime) {
+                    $q->where('start_time', '<', $bookingEndDateTime)
+                      ->where('end_time', '>', $bookingStartDateTime);
                 });
             })
-            ->where('status', '!=', 'cancelled') // Ignore cancelled bookings
+            ->where('status', '!=', 'cancelled')
             ->exists();
 
         if ($conflict) {
@@ -80,23 +79,26 @@ class BookingController extends Controller
         $booking = new Booking();
         $booking->user_id = Auth::id();
         $booking->field_id = $validatedData['field_id'];
-        $booking->booking_date = $validatedData['booking_date'];
-        $booking->start_time = $validatedData['start_time'];
-        $booking->end_time = $validatedData['end_time'];
-        $booking->status = 'confirmed'; // Default status
+        $booking->start_time = $bookingStartDateTime;
+        $booking->end_time = $bookingEndDateTime;
+        $booking->status = 'confirmed';
 
-        // Calculate total_price (simple example, can be refined)
-        $field = Field::findOrFail($validatedData['field_id']);
-        $startTime = Carbon::parse($validatedData['start_time']);
-        $endTime = Carbon::parse($validatedData['end_time']);
-        $durationInHours = $endTime->diffInMinutes($startTime) / 60;
-        
-        if ($durationInHours <= 0) { // Should be caught by 'after:start_time' but as a safeguard
-             return redirect()->back()
-                ->withErrors(['duration' => 'The booking duration must be positive.'])
-                ->withInput();
+        $diffMinutesRaw = $bookingStartDateTime->diffInMinutes($bookingEndDateTime, false);
+        $durationInMinutes = abs($diffMinutesRaw);
+        $durationInHours = $durationInMinutes / 60;
+
+        if ($durationInHours <= 0) {
+             if (!($bookingStartDateTime->eq($bookingEndDateTime) && $durationInHours == 0)) {
+                return redirect()->back()
+                    ->withErrors(['duration' => 'The booking duration must be positive. Please ensure the end time is after the start time.'])
+                    ->withInput();
+             }
         }
+
+        // Define $field before using it for total_price
+        $field = Field::findOrFail($validatedData['field_id']);
         $booking->total_price = $field->price_per_hour * $durationInHours;
+        // $booking->notes = $request->input('notes');
 
         $booking->save();
 
@@ -126,7 +128,13 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        //
+        // Authorize: only the user who made the booking or an admin can edit it.
+        if (Auth::id() !== $booking->user_id && !Auth::user()->is_admin) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $fields = Field::where('is_available', true)->orderBy('name')->get();
+        return view('bookings.edit', compact('booking', 'fields'));
     }
 
     /**
@@ -134,14 +142,91 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
-        //
+        if (!auth()->user()->is_admin && auth()->id() !== $booking->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validatedData = $request->validate([
+            'field_id' => [
+                'required',
+                'exists:fields,id'
+            ],
+            'booking_date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+        ], [
+            'booking_date.after_or_equal' => 'The booking date must be today or a future date.',
+            'end_time.after' => 'The end time must be after the start time.'
+        ]);
+
+        $bookingStartDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['start_time']);
+        $bookingEndDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['end_time']);
+
+        $conflict = Booking::where('field_id', $validatedData['field_id'])
+            ->where('id', '!=', $booking->id)
+            ->where(function ($query) use ($bookingStartDateTime, $bookingEndDateTime) {
+                $query->where(function ($q) use ($bookingStartDateTime, $bookingEndDateTime) {
+                    $q->where('start_time', '<', $bookingEndDateTime)
+                      ->where('end_time', '>', $bookingStartDateTime);
+                });
+            })
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+
+        if ($conflict) {
+            return redirect()->back()
+                ->withErrors(['conflict' => 'The selected time slot is already booked.'])
+                ->withInput();
+        }
+
+        $booking->field_id = $validatedData['field_id'];
+        $booking->start_time = $bookingStartDateTime;
+        $booking->end_time = $bookingEndDateTime;
+
+        $diffMinutesRaw = $bookingStartDateTime->diffInMinutes($bookingEndDateTime, false);
+        $durationInMinutes = abs($diffMinutesRaw);
+        $durationInHours = $durationInMinutes / 60;
+        
+        if ($durationInHours <= 0) {
+             if (!($bookingStartDateTime->eq($bookingEndDateTime) && $durationInHours == 0)) {
+                return redirect()->back()
+                    ->withErrors(['duration' => 'The booking duration must be positive. Please ensure the end time is after the start time.'])
+                    ->withInput();
+             }
+        }
+
+        // Define $field before using it for total_price
+        $field = Field::findOrFail($validatedData['field_id']);
+        $booking->total_price = $field->price_per_hour * $durationInHours;
+        // $booking->notes = $request->input('notes');
+
+        $booking->save();
+
+        return redirect()->route('bookings.show', $booking)
+            ->with('success', 'Booking updated successfully!');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified booking from storage.
      */
     public function destroy(Booking $booking)
     {
-        //
+        // Check if user is authorized to delete this booking
+        if (!auth()->user()->is_admin && auth()->id() !== $booking->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if the booking is in the past using the start_time (which is now dateTime)
+        if (Carbon::parse($booking->start_time)->isPast()) {
+            return redirect()->back()
+                ->with('error', 'Cannot delete past bookings.');
+        }
+
+        // Soft delete the booking by setting status to 'cancelled'
+        $booking->status = 'cancelled';
+        $booking->save();
+
+        return redirect()->route('bookings.index')
+            ->with('success', 'Booking cancelled successfully.');
     }
 }

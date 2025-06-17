@@ -50,6 +50,9 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {{ __('Status') }}
                                 </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ __('Total Price') }}
+                                </th>
                                 <th scope="col" class="relative px-6 py-3">
                                     <span class="sr-only">{{ __('Actions') }}</span>
                                 </th>
@@ -58,58 +61,47 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($bookings as $booking)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {{ $booking->field->name }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
+                                        {{ $booking->field ? $booking->field->name : 'N/A' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $booking->booking_date->format('d/m/Y') }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{-- Use start_time for the date, as booking_date column does not exist --}}
+                                        {{ $booking->start_time ? $booking->start_time->format('d/m/Y') : 'N/A' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $booking->start_time->format('H:i') }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $booking->start_time ? $booking->start_time->format('H:i') : 'N/A' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $booking->end_time->format('H:i') }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $booking->end_time ? $booking->end_time->format('H:i') : 'N/A' }}
                                     </td>
                                     @if(Auth::user()->is_admin)
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {{ $booking->user->name }}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $booking->user ? $booking->user->name : 'User N/A' }}
                                     </td>
                                     @endif
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        @if($booking->status == 'confirmed')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                {{ __('Confirmed') }}
-                                            </span>
-                                        @elseif($booking->status == 'pending')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                {{ __('Pending') }}
-                                            </span>
-                                        @elseif($booking->status == 'cancelled')
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                {{ __('Cancelled') }}
-                                            </span>
-                                        @else
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                {{ __(ucfirst($booking->status)) }}
-                                            </span>
-                                        @endif
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ ucfirst($booking->status) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <a href="{{ route('bookings.show', $booking) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('View') }}</a>
-                                        @if(Auth::id() == $booking->user_id || Auth::user()->is_admin)
-                                            {{-- Add Edit and Delete later if booking is not past or cancelled --}}
-                                            {{-- <a href="{{ route('bookings.edit', $booking) }}" class="ml-4 text-yellow-600 hover:text-yellow-900">{{ __('Edit') }}</a> --}}
-                                            {{-- <form action="{{ route('bookings.destroy', $booking) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('{{ __('Are you sure you want to cancel this booking?') }}');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900">{{ __('Cancel Booking') }}</button>
-                                            </form> --}}
-                                        @endif
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        €{{ number_format($booking->total_price, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="{{ route('bookings.show', $booking->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-600">View</a>
+                                        @can('update', $booking) {{-- Assuming you will create a BookingPolicy --}}
+                                            <a href="{{ route('bookings.edit', $booking->id) }}" class="ml-2 text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-600">Edit</a>
+                                        @endcan
+                                        @can('delete', $booking) {{-- Assuming you will create a BookingPolicy --}}
+                                        <form action="{{ route('bookings.destroy', $booking->id) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-600">Cancel</button>
+                                        </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ Auth::user()->is_admin ? 7 : 6 }}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    <td colspan="{{ Auth::user()->is_admin ? 8 : 7 }}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {{ __('No bookings found.') }}
                                     </td>
                                 </tr>
