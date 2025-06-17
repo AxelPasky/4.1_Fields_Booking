@@ -16,13 +16,15 @@ class BookingController extends Controller
      */
     public function index()
     {
-        // For now, admins see all bookings, users see their own.
-        // We will refine this later with proper authorization.
+        $this->authorize('viewAny', Booking::class); // Decommenta questa riga
+
         if (Auth::user()->is_admin) {
             $bookings = Booking::with(['user', 'field'])->latest()->paginate(10);
         } else {
             $bookings = Booking::where('user_id', Auth::id())
-                                ->with(['user', 'field'])->latest()->paginate(10);
+                                 ->with(['field'])
+                                 ->latest()
+                                 ->paginate(10);
         }
         return view('bookings.index', compact('bookings'));
     }
@@ -32,6 +34,8 @@ class BookingController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', Booking::class);
+
         $fields = Field::where('is_available', true)->orderBy('name')->get();
         return view('bookings.create', compact('fields'));
     }
@@ -41,6 +45,8 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Booking::class);
+
         $validatedData = $request->validate([
             'field_id' => [
                 'required',
@@ -81,7 +87,7 @@ class BookingController extends Controller
         $booking->field_id = $validatedData['field_id'];
         $booking->start_time = $bookingStartDateTime;
         $booking->end_time = $bookingEndDateTime;
-        $booking->status = 'confirmed';
+        $booking->status = 'confirmed'; // Or 'pending' if you have a confirmation step
 
         $diffMinutesRaw = $bookingStartDateTime->diffInMinutes($bookingEndDateTime, false);
         $durationInMinutes = abs($diffMinutesRaw);
@@ -95,10 +101,9 @@ class BookingController extends Controller
              }
         }
 
-        // Define $field before using it for total_price
         $field = Field::findOrFail($validatedData['field_id']);
         $booking->total_price = $field->price_per_hour * $durationInHours;
-        // $booking->notes = $request->input('notes');
+        // $booking->notes = $request->input('notes'); // If you add a notes field
 
         $booking->save();
 
@@ -111,15 +116,9 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
-        // Authorize: only the user who made the booking or an admin can view it.
-        if (Auth::id() !== $booking->user_id && !Auth::user()->is_admin) {
-            abort(403, 'Unauthorized access.');
-        }
-
-        // Eager load related models if you haven't already in the route model binding
-        // or if you need them specifically here.
+        $this->authorize('view', $booking);
+        // Eager load relationships if not already loaded by route model binding, or if needed for the view
         $booking->load(['user', 'field']);
-
         return view('bookings.show', compact('booking'));
     }
 
@@ -128,10 +127,7 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        // Authorize: only the user who made the booking or an admin can edit it.
-        if (Auth::id() !== $booking->user_id && !Auth::user()->is_admin) {
-            abort(403, 'Unauthorized access.');
-        }
+        $this->authorize('update', $booking);
 
         $fields = Field::where('is_available', true)->orderBy('name')->get();
         return view('bookings.edit', compact('booking', 'fields'));
@@ -142,26 +138,26 @@ class BookingController extends Controller
      */
     public function update(Request $request, Booking $booking)
     {
-        if (!auth()->user()->is_admin && auth()->id() !== $booking->user_id) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorize('update', $booking);
 
         $validatedData = $request->validate([
             'field_id' => [
                 'required',
-                'exists:fields,id'
+                'exists:fields,id' // Consider if the field must also be 'is_available' here
             ],
-            'booking_date' => 'required|date|after_or_equal:today',
+            'booking_date' => 'required|date', // 'after_or_equal:today' might be too restrictive if editing a past booking's notes, but for time changes it's good.
+                                                // The policy already prevents editing past bookings' times.
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
         ], [
-            'booking_date.after_or_equal' => 'The booking date must be today or a future date.',
+            // 'booking_date.after_or_equal' => 'The booking date must be today or a future date.',
             'end_time.after' => 'The end time must be after the start time.'
         ]);
 
         $bookingStartDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['start_time']);
         $bookingEndDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['end_time']);
 
+        // Check for booking conflicts, excluding the current booking
         $conflict = Booking::where('field_id', $validatedData['field_id'])
             ->where('id', '!=', $booking->id)
             ->where(function ($query) use ($bookingStartDateTime, $bookingEndDateTime) {
@@ -195,10 +191,9 @@ class BookingController extends Controller
              }
         }
 
-        // Define $field before using it for total_price
         $field = Field::findOrFail($validatedData['field_id']);
         $booking->total_price = $field->price_per_hour * $durationInHours;
-        // $booking->notes = $request->input('notes');
+        // $booking->notes = $request->input('notes'); // If you update notes
 
         $booking->save();
 
@@ -207,22 +202,19 @@ class BookingController extends Controller
     }
 
     /**
-     * Remove the specified booking from storage.
+     * Remove the specified resource from storage.
      */
     public function destroy(Booking $booking)
     {
-        // Check if user is authorized to delete this booking
-        if (!auth()->user()->is_admin && auth()->id() !== $booking->user_id) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorize('delete', $booking);
 
-        // Check if the booking is in the past using the start_time (which is now dateTime)
-        if (Carbon::parse($booking->start_time)->isPast()) {
-            return redirect()->back()
-                ->with('error', 'Cannot delete past bookings.');
-        }
+        // The policy already checks if the booking is in the past.
+        // If you need an additional check here for some reason, you can add it.
+        // if (Carbon::parse($booking->start_time)->isPast()) {
+        //     return redirect()->back()
+        //         ->with('error', 'Cannot cancel past bookings.');
+        // }
 
-        // Soft delete the booking by setting status to 'cancelled'
         $booking->status = 'cancelled';
         $booking->save();
 

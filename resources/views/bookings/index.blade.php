@@ -22,9 +22,11 @@
                     @endif
 
                     <div class="mb-4">
-                        <a href="{{ route('bookings.create') }}" class="inline-flex items-center px-4 py-2 bg-green-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-600 active:bg-green-700 focus:outline-none focus:border-green-700 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150">
-                            {{ __('Make a New Booking') }}
-                        </a>
+                        @can('create', App\Models\Booking::class)
+                            <a href="{{ route('bookings.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Create New Booking
+                            </a>
+                        @endcan
                     </div>
 
                     <table class="min-w-full divide-y divide-gray-200">
@@ -86,16 +88,18 @@
                                         €{{ number_format($booking->total_price, 2) }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="{{ route('bookings.show', $booking->id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-600">View</a>
-                                        @can('update', $booking) {{-- Assuming you will create a BookingPolicy --}}
-                                            <a href="{{ route('bookings.edit', $booking->id) }}" class="ml-2 text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-600">Edit</a>
+                                        @can('view', $booking)
+                                            <a href="{{ route('bookings.show', $booking->id) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
                                         @endcan
-                                        @can('delete', $booking) {{-- Assuming you will create a BookingPolicy --}}
-                                        <form action="{{ route('bookings.destroy', $booking->id) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-600">Cancel</button>
-                                        </form>
+                                        @can('update', $booking)
+                                            <a href="{{ route('bookings.edit', $booking->id) }}" class="ml-2 text-yellow-600 hover:text-yellow-900">Edit</a>
+                                        @endcan
+                                        @can('delete', $booking)
+                                            <form action="{{ route('bookings.destroy', $booking->id) }}" method="POST" class="inline-block ml-2" onsubmit="return confirm('Are you sure?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Cancel</button>
+                                            </form>
                                         @endcan
                                     </td>
                                 </tr>
