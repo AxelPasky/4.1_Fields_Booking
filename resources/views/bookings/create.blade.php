@@ -30,7 +30,7 @@
                                 <option value="">{{ __('-- Please choose a field --') }}</option>
                                 @foreach ($fields as $field)
                                     <option value="{{ $field->id }}" {{ old('field_id') == $field->id ? 'selected' : '' }}>
-                                        {{ $field->name }} ({{ $field->type }}) - &euro;{{ number_format($field->hourly_rate, 2) }}/hr
+                                        {{ $field->name }} ({{ $field->type }}) - &euro;{{ number_format($field->price_per_hour, 2) }}/hr
                                     </option>
                                 @endforeach
                             </select>

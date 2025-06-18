@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Booking; // Importa Booking
+use App\Models\Field;
 use App\Policies\BookingPolicy; // Importa BookingPolicy
+use App\Policies\FieldPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -16,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy', // Esempio originale
         Booking::class => BookingPolicy::class, // Aggiungi questa riga
+        Field::class => FieldPolicy::class,
     ];
 
     /**
