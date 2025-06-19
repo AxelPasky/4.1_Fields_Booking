@@ -45,6 +45,12 @@ class FieldController extends Controller
         // Gestisce correttamente il valore del checkbox 'is_available'
         $validatedData['is_available'] = $request->has('is_available');
 
+        if ($request->hasFile('image')) {
+            // Salva il file in storage/app/public/fields e ottieni il percorso
+            $path = $request->file('image')->store('fields', 'public');
+            $validatedData['image_path'] = $path;
+        }
+
         Field::create($validatedData);
 
         return redirect()->route('fields.index')
@@ -85,6 +91,12 @@ class FieldController extends Controller
         ]);
 
         $validatedData['is_available'] = $request->has('is_available');
+
+        if ($request->hasFile('image')) {
+            // Salva il file in storage/app/public/fields e ottieni il percorso
+            $path = $request->file('image')->store('fields', 'public');
+            $validatedData['image_path'] = $path;
+        }
 
         $field->update($validatedData);
 

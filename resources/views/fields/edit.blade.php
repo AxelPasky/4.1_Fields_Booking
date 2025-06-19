@@ -20,7 +20,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('fields.update', $field) }}">
+                    <form method="POST" action="{{ route('fields.update', $field) }}" enctype="multipart/form-data" >
                         @csrf
                         @method('PUT')
 
@@ -50,7 +50,7 @@
                         <!-- Image Path (Placeholder) -->
                         <div class="mt-4">
                             <label for="image_path" class="block font-medium text-sm text-gray-700">{{ __('Image Path (optional, e.g., /images/field1.jpg)') }}</label>
-                            <input id="image_path" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="text" name="image_path" value="{{ old('image_path', $field->image_path) }}" />
+                            <input type="file" name="image" id="image_path" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="text" name="image_path" value="{{ old('image_path', $field->image_path) }}" />
                             <p class="mt-2 text-sm text-gray-500">Note: Actual image upload handling will be implemented later.</p>
                         </div>
 
