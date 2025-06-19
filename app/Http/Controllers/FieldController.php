@@ -38,7 +38,7 @@ class FieldController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price_per_hour' => 'required|numeric|min:0',
-            'image_path' => 'nullable|string|max:255', // Se usi l'upload, questo cambierà
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validazione immagine
             'is_available' => 'sometimes|boolean',
         ]);
 
@@ -48,7 +48,7 @@ class FieldController extends Controller
         if ($request->hasFile('image')) {
             // Salva il file in storage/app/public/fields e ottieni il percorso
             $path = $request->file('image')->store('fields', 'public');
-            $validatedData['image_path'] = $path;
+            $validatedData['image'] = $path;
         }
 
         Field::create($validatedData);
@@ -86,7 +86,7 @@ class FieldController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price_per_hour' => 'required|numeric|min:0',
-            'image_path' => 'nullable|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validazione immagine
             'is_available' => 'sometimes|boolean',
         ]);
 
@@ -95,7 +95,7 @@ class FieldController extends Controller
         if ($request->hasFile('image')) {
             // Salva il file in storage/app/public/fields e ottieni il percorso
             $path = $request->file('image')->store('fields', 'public');
-            $validatedData['image_path'] = $path;
+            $validatedData['image'] = $path;
         }
 
         $field->update($validatedData);

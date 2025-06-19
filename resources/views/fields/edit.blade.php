@@ -47,11 +47,14 @@
                             <textarea id="description" name="description" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('description', $field->description) }}</textarea>
                         </div>
 
-                        <!-- Image Path (Placeholder) -->
+                        <!-- Image -->
                         <div class="mt-4">
-                            <label for="image_path" class="block font-medium text-sm text-gray-700">{{ __('Image Path (optional, e.g., /images/field1.jpg)') }}</label>
-                            <input type="file" name="image" id="image_path" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="text" name="image_path" value="{{ old('image_path', $field->image_path) }}" />
-                            <p class="mt-2 text-sm text-gray-500">Note: Actual image upload handling will be implemented later.</p>
+                            <label for="image" class="block font-medium text-sm text-gray-700">{{ __('New Field Image (optional)') }}</label>
+                            <input type="file" name="image" id="image" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" />
+                            <x-input-error :messages="$errors->get('image')" class="mt-2" />
+                            @if ($field->image)
+                                <p class="mt-2 text-sm text-gray-500">Current image: <img src="{{ asset('storage/' . $field->image) }}" alt="Current image" class="h-16 w-16 object-cover inline-block ml-2"></p>
+                            @endif
                         </div>
 
                         <!-- Hourly Rate -->

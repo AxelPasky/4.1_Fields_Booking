@@ -11,6 +11,13 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     
+                    {{-- Mostra l'immagine se esiste (con la colonna corretta) --}}
+                    @if($field->image)
+                        <div class="mb-6">
+                            <img src="{{ asset('storage/' . $field->image) }}" alt="{{ $field->name }}" class="w-full h-64 object-cover rounded-lg shadow-md">
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div>
                             <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Name</h3>
