@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Field;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
+use App\Notifications\BookingCancelledForAdminNotification;
+use App\Notifications\BookingCancelledForUserNotification;
 
 class BookingController extends Controller
 {
@@ -208,17 +212,19 @@ class BookingController extends Controller
     {
         $this->authorize('delete', $booking);
 
-        // The policy already checks if the booking is in the past.
-        // If you need an additional check here for some reason, you can add it.
-        // if (Carbon::parse($booking->start_time)->isPast()) {
-        //     return redirect()->back()
-        //         ->with('error', 'Cannot cancel past bookings.');
-        // }
+        if (Auth::user()->is_admin) {
+            // L'admin sta cancellando, avvisa l'utente
+            $userToNotify = $booking->user;
+            if ($userToNotify->id !== Auth::id()) { // Non inviare a te stesso se sei l'utente
+                $userToNotify->notify(new BookingCancelledForUserNotification($booking));
+            }
+        } else {
+            // L'utente sta cancellando, avvisa tutti gli admin
+            $admins = User::where('is_admin', true)->get();
+            Notification::send($admins, new BookingCancelledForAdminNotification($booking));
+        }
 
-        $booking->status = 'cancelled';
-        $booking->save();
-
-        return redirect()->route('bookings.index')
-            ->with('success', 'Booking cancelled successfully.');
+        $booking->delete();
+        return redirect()->route('bookings.index')->with('success', 'Booking cancelled successfully.');
     }
 }

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Field;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\FieldDeletedNotification;
+use Illuminate\Support\Facades\Storage;
 
 class FieldController extends Controller
 {
@@ -111,15 +114,26 @@ class FieldController extends Controller
     {
         $this->authorize('delete', $field);
 
-        // Impedisce la cancellazione se il campo ha prenotazioni associate
-        if ($field->bookings()->exists()) {
-            return redirect()->route('fields.index')
-                             ->with('error', 'Cannot delete this field because it has existing bookings.');
+        // Trova tutti gli utenti unici che hanno prenotato questo campo
+        $usersToNotify = $field->bookings()->with('user')->get()->pluck('user')->unique();
+
+        // Invia la notifica a tutti gli utenti interessati
+        if ($usersToNotify->isNotEmpty()) {
+            Notification::send($usersToNotify, new FieldDeletedNotification($field));
         }
 
+        // Cancella tutte le prenotazioni associate
+        $field->bookings()->delete();
+
+        // Cancella l'immagine associata, se esiste
+        if ($field->image) {
+            Storage::disk('public')->delete($field->image);
+        }
+
+        // Cancella il campo
         $field->delete();
 
         return redirect()->route('fields.index')
-                         ->with('success', 'Field deleted successfully.');
+                         ->with('success', 'Field and all its associated bookings have been deleted successfully.');
     }
 }
