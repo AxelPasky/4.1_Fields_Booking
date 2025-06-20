@@ -86,7 +86,7 @@ class FieldController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price_per_hour' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validazione immagine
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // Validazione immagine
             'is_available' => 'sometimes|boolean',
         ]);
 

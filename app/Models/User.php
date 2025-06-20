@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail; // <-- 1. Decommenta questa riga
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail // <-- 2. Aggiungi "implements MustVerifyEmail"
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -21,7 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_admin',
+        'is_admin', // Assicurati che anche questo sia qui
     ];
 
     /**
@@ -44,12 +44,14 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean',
+            'is_admin' => 'boolean', // Assicurati che anche questo sia qui
         ];
     }
 
     /**
-     * Get the bookings for the user.
+     * Get all of the bookings for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function bookings()
     {
