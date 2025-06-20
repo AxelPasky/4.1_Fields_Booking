@@ -12,6 +12,10 @@ use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use App\Notifications\BookingCancelledForAdminNotification;
 use App\Notifications\BookingCancelledForUserNotification;
+use App\Notifications\BookingCreatedForUserNotification;
+use App\Notifications\BookingCreatedForAdminNotification;
+use App\Notifications\BookingUpdatedForUserNotification;
+use App\Notifications\BookingUpdatedForAdminNotification;
 
 class BookingController extends Controller
 {
@@ -145,64 +149,55 @@ class BookingController extends Controller
         $this->authorize('update', $booking);
 
         $validatedData = $request->validate([
-            'field_id' => [
-                'required',
-                'exists:fields,id' // Consider if the field must also be 'is_available' here
-            ],
-            'booking_date' => 'required|date', // 'after_or_equal:today' might be too restrictive if editing a past booking's notes, but for time changes it's good.
-                                                // The policy already prevents editing past bookings' times.
+            'field_id' => 'required|exists:fields,id',
+            'booking_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-        ], [
-            // 'booking_date.after_or_equal' => 'The booking date must be today or a future date.',
-            'end_time.after' => 'The end time must be after the start time.'
         ]);
 
-        $bookingStartDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['start_time']);
-        $bookingEndDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['end_time']);
+        $startDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['start_time']);
+        $endDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['end_time']);
 
-        // Check for booking conflicts, excluding the current booking
-        $conflict = Booking::where('field_id', $validatedData['field_id'])
+        // Check for overlapping bookings, excluding the current one
+        $overlappingBookings = Booking::where('field_id', $validatedData['field_id'])
             ->where('id', '!=', $booking->id)
-            ->where(function ($query) use ($bookingStartDateTime, $bookingEndDateTime) {
-                $query->where(function ($q) use ($bookingStartDateTime, $bookingEndDateTime) {
-                    $q->where('start_time', '<', $bookingEndDateTime)
-                      ->where('end_time', '>', $bookingStartDateTime);
-                });
-            })
-            ->where('status', '!=', 'cancelled')
-            ->exists();
+            ->where(function ($query) use ($startDateTime, $endDateTime) {
+                $query->where('start_time', '<', $endDateTime)
+                      ->where('end_time', '>', $startDateTime);
+            })->exists();
 
-        if ($conflict) {
-            return redirect()->back()
-                ->withErrors(['conflict' => 'The selected time slot is already booked.'])
-                ->withInput();
-        }
-
-        $booking->field_id = $validatedData['field_id'];
-        $booking->start_time = $bookingStartDateTime;
-        $booking->end_time = $bookingEndDateTime;
-
-        $diffMinutesRaw = $bookingStartDateTime->diffInMinutes($bookingEndDateTime, false);
-        $durationInMinutes = abs($diffMinutesRaw);
-        $durationInHours = $durationInMinutes / 60;
-        
-        if ($durationInHours <= 0) {
-             if (!($bookingStartDateTime->eq($bookingEndDateTime) && $durationInHours == 0)) {
-                return redirect()->back()
-                    ->withErrors(['duration' => 'The booking duration must be positive. Please ensure the end time is after the start time.'])
-                    ->withInput();
-             }
+        if ($overlappingBookings) {
+            return back()->withErrors(['booking_date' => 'The selected time slot is already booked.'])->withInput();
         }
 
         $field = Field::findOrFail($validatedData['field_id']);
-        $booking->total_price = $field->price_per_hour * $durationInHours;
-        // $booking->notes = $request->input('notes'); // If you update notes
+        $durationInHours = $endDateTime->diffInMinutes($startDateTime) / 60;
+        $totalPrice = $durationInHours * $field->price_per_hour;
 
-        $booking->save();
+        $booking->update([
+            'field_id' => $validatedData['field_id'],
+            'start_time' => $startDateTime,
+            'end_time' => $endDateTime,
+            'total_price' => $totalPrice,
+        ]);
 
-        return redirect()->route('bookings.show', $booking)
-            ->with('success', 'Booking updated successfully!');
+        // --- INIZIO BLOCCO NOTIFICHE ---
+        // Controlla chi sta modificando e invia la notifica appropriata
+        if (Auth::user()->is_admin) {
+            // L'admin sta modificando, avvisa l'utente proprietario della prenotazione
+            $userToNotify = $booking->user;
+            // Assicurati che l'admin non stia modificando una propria prenotazione
+            if ($userToNotify->id !== Auth::id()) {
+                $userToNotify->notify(new BookingUpdatedForUserNotification($booking));
+            }
+        } else {
+            // L'utente sta modificando, avvisa tutti gli admin
+            $admins = User::where('is_admin', true)->get();
+            Notification::send($admins, new BookingUpdatedForAdminNotification($booking));
+        }
+        // --- FINE BLOCCO NOTIFICHE ---
+
+        return redirect()->route('bookings.show', $booking)->with('success', 'Booking updated successfully!');
     }
 
     /**
