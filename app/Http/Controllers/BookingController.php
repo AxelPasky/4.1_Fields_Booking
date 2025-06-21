@@ -55,6 +55,12 @@ class BookingController extends Controller
     {
         $this->authorize('create', Booking::class);
 
+        $thirtyMinuteRule = function ($attribute, $value, $fail) {
+            if (Carbon::parse($value)->minute % 30 !== 0) {
+                $fail('The ' . str_replace('_', ' ', $attribute) . ' must be in 30-minute increments (e.g., 09:00, 09:30).');
+            }
+        };
+
         $validatedData = $request->validate([
             'field_id' => [
                 'required',
@@ -63,8 +69,10 @@ class BookingController extends Controller
                 }),
             ],
             'booking_date' => 'required|date|after_or_equal:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            // --- INIZIO CORREZIONE ---
+            'start_time' => ['required', 'date_format:H:i', $thirtyMinuteRule],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time', $thirtyMinuteRule]
+            // --- FINE CORREZIONE ---
         ], [
             'field_id.exists' => 'The selected field is not available or does not exist.',
             'booking_date.after_or_equal' => 'The booking date cannot be in the past.',
@@ -148,11 +156,17 @@ class BookingController extends Controller
     {
         $this->authorize('update', $booking);
 
+        $thirtyMinuteRule = function ($attribute, $value, $fail) {
+                    if (Carbon::parse($value)->minute % 30 !== 0) {
+                        $fail('The ' . str_replace('_', ' ', $attribute) . ' must be in 30-minute increments (e.g., 09:00, 09:30).');
+                    }
+                };
+
         $validatedData = $request->validate([
             'field_id' => 'required|exists:fields,id',
             'booking_date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'start_time' => ['required', 'date_format:H:i', $thirtyMinuteRule],
+            'end_time' =>  ['required', 'date_format:H:i', 'after:start_time', $thirtyMinuteRule],
         ]);
 
         $startDateTime = Carbon::parse($validatedData['booking_date'] . ' ' . $validatedData['start_time']);
@@ -171,8 +185,13 @@ class BookingController extends Controller
         }
 
         $field = Field::findOrFail($validatedData['field_id']);
-        $durationInHours = $endDateTime->diffInMinutes($startDateTime) / 60;
+        
+        // --- INIZIO CORREZIONE ---
+        // Calcolo della durata sicuro, identico al metodo store()
+        $durationInMinutes = $startDateTime->diffInMinutes($endDateTime, false);
+        $durationInHours = abs($durationInMinutes) / 60;
         $totalPrice = $durationInHours * $field->price_per_hour;
+        // --- FINE CORREZIONE ---
 
         $booking->update([
             'field_id' => $validatedData['field_id'],

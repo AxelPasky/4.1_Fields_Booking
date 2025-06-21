@@ -16,9 +16,7 @@ class FieldController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', Field::class);
-        $fields = Field::latest()->paginate(10);
-        return view('fields.index', compact('fields'));
+        return view('fields.index');
     }
 
     /**
