@@ -89,47 +89,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const startTimeSelect = document.getElementById('start_time');
-            const endTimeSelect = document.getElementById('end_time');
-
-            function updateEndTimeOptions() {
-                const selectedStartTime = startTimeSelect.value;
-
-                // Se non è selezionato un orario di inizio, disabilita tutte le opzioni di fine
-                if (!selectedStartTime) {
-                    for (const option of endTimeSelect.options) {
-                        if (option.value !== "") option.disabled = true;
-                    }
-                    endTimeSelect.value = "";
-                    return;
-                }
-
-                let isCurrentEndTimeValid = false;
-
-                for (const option of endTimeSelect.options) {
-                    if (option.value === "") continue;
-
-                    if (option.value <= selectedStartTime) {
-                        option.disabled = true;
-                    } else {
-                        option.disabled = false;
-                    }
-
-                    if (option.selected && !option.disabled) {
-                        isCurrentEndTimeValid = true;
-                    }
-                }
-
-                if (!isCurrentEndTimeValid) {
-                    endTimeSelect.value = "";
-                }
-            }
-
-            startTimeSelect.addEventListener('change', updateEndTimeOptions);
-            updateEndTimeOptions();
-        });
-    </script>
+   
 </x-app-layout>

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Field;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreFieldRequest; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\FieldDeletedNotification;
@@ -32,25 +32,19 @@ class FieldController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreFieldRequest $request) 
     {
-        $this->authorize('create', Field::class);
+       
+        $validatedData = $request->validated();
 
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255|unique:fields',
-            'type' => ['required', Rule::in(['tennis', 'padel', 'football', 'basket'])], // Validazione Enum
-            'description' => 'nullable|string',
-            'price_per_hour' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'is_available' => 'sometimes|boolean',
-        ]);
+        $validatedData['is_available'] = $request->has('is_available');
 
-        // Creiamo il campo usando i dati validati
-        Field::create([
-            'name' => $validatedData['name'],
-            'price_per_hour' => $validatedData['price_per_hour'],
-            'is_available' => $request->has('is_available'),
-        ]);
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('fields', 'public');
+            $validatedData['image'] = $path;
+        }
+
+        Field::create($validatedData);
 
         return redirect()->route('fields.index')->with('success', 'Field created successfully.');
     }
@@ -76,23 +70,17 @@ class FieldController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Field $field)
+    public function update(StoreFieldRequest $request, Field $field) 
     {
-        $this->authorize('update', $field);
-
-        $validatedData = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('fields')->ignore($field->id)],
-            'type' => ['required', Rule::in(['tennis', 'padel', 'football', 'basket'])], // Validazione Enum
-            'description' => 'nullable|string',
-            'price_per_hour' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'is_available' => 'sometimes|boolean',
-        ]);
+    
+        $validatedData = $request->validated();
 
         $validatedData['is_available'] = $request->has('is_available');
 
         if ($request->hasFile('image')) {
-            // Salva il file in storage/app/public/fields e ottieni il percorso
+            if ($field->image) {
+                Storage::disk('public')->delete($field->image);
+            }
             $path = $request->file('image')->store('fields', 'public');
             $validatedData['image'] = $path;
         }
@@ -110,23 +98,18 @@ class FieldController extends Controller
     {
         $this->authorize('delete', $field);
 
-        // Trova tutti gli utenti unici che hanno prenotato questo campo
         $usersToNotify = $field->bookings()->with('user')->get()->pluck('user')->unique();
 
-        // Invia la notifica a tutti gli utenti interessati
         if ($usersToNotify->isNotEmpty()) {
             Notification::send($usersToNotify, new FieldDeletedNotification($field));
         }
 
-        // Cancella tutte le prenotazioni associate
         $field->bookings()->delete();
 
-        // Cancella l'immagine associata, se esiste
         if ($field->image) {
             Storage::disk('public')->delete($field->image);
         }
 
-        // Cancella il campo
         $field->delete();
 
         return redirect()->route('fields.index')

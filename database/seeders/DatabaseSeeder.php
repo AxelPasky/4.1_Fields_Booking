@@ -14,22 +14,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crea l'utente Amministratore
+     
         User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
-            'password' => Hash::make('password'), // Ricorda questa password!
+            'password' => Hash::make('password'), // <-- password is the password :)
             'is_admin' => true,
         ]);
 
-        // Crea un utente normale
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'user@example.com',
-            'password' => Hash::make('password'), // Ricorda questa password!
+            'password' => Hash::make('password'), 
         ]);
 
-        // Crea 5 campi usando la factory
         Field::factory(5)->create();
     }
 }

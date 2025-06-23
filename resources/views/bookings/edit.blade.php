@@ -91,51 +91,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const startTimeSelect = document.getElementById('start_time');
-            const endTimeSelect = document.getElementById('end_time');
-
-            function updateEndTimeOptions() {
-                const selectedStartTime = startTimeSelect.value;
-
-                // Se non è selezionato un orario di inizio, non fare nulla
-                if (!selectedStartTime) {
-                    return;
-                }
-
-                let isCurrentEndTimeValid = false;
-
-                // Itera su tutte le opzioni di End Time
-                for (const option of endTimeSelect.options) {
-                    // Salta l'opzione placeholder se presente
-                    if (option.value === "") continue;
-
-                    // Disabilita l'opzione se l'orario è precedente o uguale a Start Time
-                    if (option.value <= selectedStartTime) {
-                        option.disabled = true;
-                    } else {
-                        option.disabled = false;
-                    }
-
-                    // Controlla se l'opzione attualmente selezionata è ancora valida
-                    if (option.selected && !option.disabled) {
-                        isCurrentEndTimeValid = true;
-                    }
-                }
-
-                // Se l'orario di fine precedentemente selezionato non è più valido, resetta la selezione
-                if (!isCurrentEndTimeValid) {
-                    endTimeSelect.value = "";
-                }
-            }
-
-            // Aggiungi un listener per l'evento 'change' su Start Time
-            startTimeSelect.addEventListener('change', updateEndTimeOptions);
-
-            // Esegui la funzione al caricamento della pagina per impostare lo stato iniziale
-            updateEndTimeOptions();
-        });
-    </script>
+    
 </x-app-layout>
