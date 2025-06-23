@@ -3,12 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Field;
-use App\Http\Requests\StoreFieldRequest; 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\FieldDeletedNotification;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use App\Http\Requests\StoreFieldRequest;
+use App\Services\FieldService; // <-- Importa il nuovo service
 
 class FieldController extends Controller
 {
@@ -17,6 +13,7 @@ class FieldController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Field::class);
         return view('fields.index');
     }
 
@@ -32,19 +29,17 @@ class FieldController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreFieldRequest $request) 
+    public function store(StoreFieldRequest $request, FieldService $fieldService)
     {
-       
         $validatedData = $request->validated();
-
         $validatedData['is_available'] = $request->has('is_available');
 
+        // Passiamo anche il file immagine, se presente
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('fields', 'public');
-            $validatedData['image'] = $path;
+            $validatedData['image'] = $request->file('image');
         }
 
-        Field::create($validatedData);
+        $fieldService->createField($validatedData);
 
         return redirect()->route('fields.index')->with('success', 'Field created successfully.');
     }
@@ -70,47 +65,28 @@ class FieldController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreFieldRequest $request, Field $field) 
+    public function update(StoreFieldRequest $request, Field $field, FieldService $fieldService)
     {
-    
         $validatedData = $request->validated();
-
         $validatedData['is_available'] = $request->has('is_available');
 
         if ($request->hasFile('image')) {
-            if ($field->image) {
-                Storage::disk('public')->delete($field->image);
-            }
-            $path = $request->file('image')->store('fields', 'public');
-            $validatedData['image'] = $path;
+            $validatedData['image'] = $request->file('image');
         }
 
-        $field->update($validatedData);
+        $fieldService->updateField($field, $validatedData);
 
-        return redirect()->route('fields.index')
-                         ->with('success', 'Field updated successfully.');
+        return redirect()->route('fields.index')->with('success', 'Field updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Field $field)
+    public function destroy(Field $field, FieldService $fieldService)
     {
         $this->authorize('delete', $field);
 
-        $usersToNotify = $field->bookings()->with('user')->get()->pluck('user')->unique();
-
-        if ($usersToNotify->isNotEmpty()) {
-            Notification::send($usersToNotify, new FieldDeletedNotification($field));
-        }
-
-        $field->bookings()->delete();
-
-        if ($field->image) {
-            Storage::disk('public')->delete($field->image);
-        }
-
-        $field->delete();
+        $fieldService->deleteField($field);
 
         return redirect()->route('fields.index')
                          ->with('success', 'Field and all its associated bookings have been deleted successfully.');

@@ -23,9 +23,8 @@ class StoreBookingRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
      */
+
     public function rules(): array
     {
         $thirtyMinuteRule = function ($attribute, $value, $fail) {
@@ -49,7 +48,7 @@ class StoreBookingRequest extends FormRequest
             $rules['field_id'][] = 'exists:fields,id';
         }
 
-        // Aggiunge la validazione per le sovrapposizioni direttamente qui
+      
         $rules['start_time'][] = function ($attribute, $value, $fail) {
             $startDateTime = Carbon::parse($this->input('booking_date') . ' ' . $this->input('start_time'));
             $endDateTime = Carbon::parse($this->input('booking_date') . ' ' . $this->input('end_time'));
@@ -58,7 +57,7 @@ class StoreBookingRequest extends FormRequest
                 ->where('start_time', '<', $endDateTime)
                 ->where('end_time', '>', $startDateTime);
 
-            // Se stiamo aggiornando, escludiamo la prenotazione corrente dal controllo
+           
             if ($this->booking) {
                 $query->where('id', '!=', $this->booking->id);
             }

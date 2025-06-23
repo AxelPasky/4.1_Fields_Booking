@@ -12,6 +12,7 @@ use App\Notifications\BookingCreatedForAdminNotification;
 use App\Notifications\BookingCreatedForUserNotification;
 use App\Notifications\BookingUpdatedForAdminNotification;
 use App\Notifications\BookingUpdatedForUserNotification;
+use App\Services\BookingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -49,21 +50,9 @@ class BookingController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBookingRequest $request)
+    public function store(StoreBookingRequest $request, BookingService $bookingService)
     {
-        $validatedData = $request->validated();
-        $bookingData = $this->prepareBookingData($validatedData);
-
-        // Aggiungiamo i dati specifici per la creazione
-        $bookingData['user_id'] = Auth::id();
-        $bookingData['status'] = 'confirmed';
-
-        $booking = Booking::create($bookingData);
-
-        // Notification
-        $admins = User::where('is_admin', true)->get();
-        Notification::send($admins, new BookingCreatedForAdminNotification($booking));
-        Auth::user()->notify(new BookingCreatedForUserNotification($booking));
+        $bookingService->createBooking($request->validated(), $request->user());
 
         return redirect()->route('bookings.index')->with('success', 'Booking created successfully!');
     }
