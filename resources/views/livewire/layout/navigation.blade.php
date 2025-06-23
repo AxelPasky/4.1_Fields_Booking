@@ -33,13 +33,6 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Home') }}
                     </x-nav-link>
-
-                    {{-- Link "Fields" solo per Admin --}}
-                    @if(Auth::user()->is_admin)
-                        <x-nav-link :href="route('fields.index')" :active="request()->routeIs('fields.*')" wire:navigate>
-                            {{ __('Fields') }}
-                        </x-nav-link>
-                    @endif
                 </div>
             </div>
 
@@ -73,6 +66,13 @@ new class extends Component
                             {{ __('My Bookings') }}
                         </x-dropdown-link>
 
+                        {{-- Link "Fields" solo per Admin --}}
+                        @if(Auth::user()->is_admin)
+                            <x-dropdown-link :href="route('fields.index')" wire:navigate>
+                                {{ __('Manage Fields') }}
+                            </x-dropdown-link>
+                        @endif
+
                         <!-- Authentication -->
                         <button wire:click="logout" class="w-full text-start">
                             <x-dropdown-link>
@@ -101,13 +101,6 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Home') }}
             </x-responsive-nav-link>
-
-            {{-- Link "Fields" solo per Admin (versione mobile) --}}
-            @if(Auth::user()->is_admin)
-                <x-responsive-nav-link :href="route('fields.index')" :active="request()->routeIs('fields.*')" wire:navigate>
-                    {{ __('Fields') }}
-                </x-responsive-nav-link>
-            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -130,6 +123,13 @@ new class extends Component
                 <x-responsive-nav-link :href="route('bookings.index')" wire:navigate>
                     {{ __('My Bookings') }}
                 </x-responsive-nav-link>
+
+                {{-- Link "Fields" solo per Admin (versione mobile) --}}
+                @if(Auth::user()->is_admin)
+                    <x-responsive-nav-link :href="route('fields.index')" wire:navigate>
+                        {{ __('Manage Fields') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Authentication -->
                 <button wire:click="logout" class="w-full text-start">

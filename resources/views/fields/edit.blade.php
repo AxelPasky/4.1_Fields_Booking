@@ -1,4 +1,3 @@
-<!-- resources/views/fields/edit.blade.php -->
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -30,15 +29,20 @@
                             <input id="name" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="text" name="name" value="{{ old('name', $field->name) }}" required autofocus />
                         </div>
 
-                        <!-- Type -->
+                        <!-- Field Type -->
                         <div class="mt-4">
-                            <label for="type" class="block font-medium text-sm text-gray-700">{{ __('Field Type') }}</label>
-                            <select id="type" name="type" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
-                                <option value="tennis" {{ old('type', $field->type) == 'tennis' ? 'selected' : '' }}>{{ __('Tennis') }}</option>
-                                <option value="padel" {{ old('type', $field->type) == 'padel' ? 'selected' : '' }}>{{ __('Padel') }}</option>
-                                <option value="football" {{ old('type', $field->type) == 'football' ? 'selected' : '' }}>{{ __('Football') }}</option>
-                                <option value="basket" {{ old('type', $field->type) == 'basket' ? 'selected' : '' }}>{{ __('Basket') }}</option>
+                            <x-input-label for="type" :value="__('Field Type')" />
+                            <select name="type" id="type" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                @php
+                                    $types = ['tennis', 'padel', 'football', 'basket'];
+                                @endphp
+                                @foreach($types as $type)
+                                    <option value="{{ $type }}" {{ old('type', $field->type) == $type ? 'selected' : '' }}>
+                                        {{ ucfirst($type) }}
+                                    </option>
+                                @endforeach
                             </select>
+                            <x-input-error :messages="$errors->get('type')" class="mt-2" />
                         </div>
 
                         <!-- Description -->

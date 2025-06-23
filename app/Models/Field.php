@@ -16,8 +16,11 @@ class Field extends Model
      */
     protected $fillable = [
         'name',
+        'type', 
         'price_per_hour',
-        'is_available', // Aggiungi questa riga
+        'is_available',
+        'description',
+        'image',
     ];
 
     /**

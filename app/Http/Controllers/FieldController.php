@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\FieldDeletedNotification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class FieldController extends Controller
 {
@@ -37,15 +38,17 @@ class FieldController extends Controller
 
         $validatedData = $request->validate([
             'name' => 'required|string|max:255|unique:fields',
+            'type' => ['required', Rule::in(['tennis', 'padel', 'football', 'basket'])], // Validazione Enum
+            'description' => 'nullable|string',
             'price_per_hour' => 'required|numeric|min:0',
-            'is_available' => 'sometimes|boolean', // Aggiungiamo la validazione
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'is_available' => 'sometimes|boolean',
         ]);
 
         // Creiamo il campo usando i dati validati
         Field::create([
             'name' => $validatedData['name'],
             'price_per_hour' => $validatedData['price_per_hour'],
-            // Se il checkbox è spuntato, il request avrà 'is_available'. Altrimenti no.
             'is_available' => $request->has('is_available'),
         ]);
 
@@ -78,10 +81,11 @@ class FieldController extends Controller
         $this->authorize('update', $field);
 
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', Rule::unique('fields')->ignore($field->id)],
+            'type' => ['required', Rule::in(['tennis', 'padel', 'football', 'basket'])], // Validazione Enum
             'description' => 'nullable|string',
             'price_per_hour' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // Validazione immagine
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'is_available' => 'sometimes|boolean',
         ]);
 

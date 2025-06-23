@@ -30,15 +30,17 @@
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
 
-                        <!-- Type -->
+                        <!-- Field Type -->
                         <div class="mt-4">
-                            <label for="type" class="block font-medium text-sm text-gray-700">{{ __('Field Type') }}</label>
-                            <select id="type" name="type" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
-                                <option value="tennis" {{ old('type') == 'tennis' ? 'selected' : '' }}>{{ __('Tennis') }}</option>
-                                <option value="padel" {{ old('type') == 'padel' ? 'selected' : '' }}>{{ __('Padel') }}</option>
-                                <option value="football" {{ old('type') == 'football' ? 'selected' : '' }}>{{ __('Football') }}</option>
-                                <option value="basket" {{ old('type') == 'basket' ? 'selected' : '' }}>{{ __('Basket') }}</option>
+                            <x-input-label for="type" :value="__('Field Type')" />
+                            <select name="type" id="type" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <option value="" disabled selected>Select a type</option>
+                                <option value="tennis" {{ old('type') == 'tennis' ? 'selected' : '' }}>Tennis</option>
+                                <option value="padel" {{ old('type') == 'padel' ? 'selected' : '' }}>Padel</option>
+                                <option value="football" {{ old('type') == 'football' ? 'selected' : '' }}>Football</option>
+                                <option value="basket" {{ old('type') == 'basket' ? 'selected' : '' }}>Basket</option>
                             </select>
+                            <x-input-error :messages="$errors->get('type')" class="mt-2" />
                         </div>
 
                         <!-- Description -->
