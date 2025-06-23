@@ -49,18 +49,39 @@
                         <!-- Start Time -->
                         <div class="mt-4">
                             <x-input-label for="start_time" :value="__('Start Time')" />
-                            <x-text-input id="start_time" class="block mt-1 w-full" type="time" name="start_time" :value="old('start_time', $booking->start_time->format('H:i'))" required />
+                            <select id="start_time" name="start_time" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                                @for ($h = 0; $h < 24; $h++)
+                                    @for ($m = 0; $m < 60; $m += 30)
+                                        @php $time = sprintf('%02d:%02d', $h, $m); @endphp
+                                        <option value="{{ $time }}" {{ old('start_time', $booking->start_time->format('H:i')) == $time ? 'selected' : '' }}>
+                                            {{ $time }}
+                                        </option>
+                                    @endfor
+                                @endfor
+                            </select>
                             <x-input-error :messages="$errors->get('start_time')" class="mt-2" />
                         </div>
 
                         <!-- End Time -->
                         <div class="mt-4">
                             <x-input-label for="end_time" :value="__('End Time')" />
-                            <x-text-input id="end_time" class="block mt-1 w-full" type="time" name="end_time" :value="old('end_time', $booking->end_time->format('H:i'))" required />
+                            <select id="end_time" name="end_time" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                                @for ($h = 0; $h < 24; $h++)
+                                    @for ($m = 0; $m < 60; $m += 30)
+                                        @php $time = sprintf('%02d:%02d', $h, $m); @endphp
+                                        <option value="{{ $time }}" {{ old('end_time', $booking->end_time->format('H:i')) == $time ? 'selected' : '' }}>
+                                            {{ $time }}
+                                        </option>
+                                    @endfor
+                                @endfor
+                            </select>
                             <x-input-error :messages="$errors->get('end_time')" class="mt-2" />
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
+                            <a href="{{ route('bookings.index') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150 mr-4">
+                                {{ __('Cancel') }}
+                            </a>
                             <x-primary-button>
                                 {{ __('Update Booking') }}
                             </x-primary-button>
@@ -70,4 +91,5 @@
             </div>
         </div>
     </div>
+    
 </x-app-layout>

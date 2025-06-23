@@ -16,10 +16,11 @@ class Field extends Model
      */
     protected $fillable = [
         'name',
-        'type',
-        'location',
+        'type', 
         'price_per_hour',
-        'image'
+        'is_available',
+        'description',
+        'image',
     ];
 
     /**

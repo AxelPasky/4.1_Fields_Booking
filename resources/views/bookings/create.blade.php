@@ -44,21 +44,37 @@
 
                         <!-- Start Time -->
                         <div class="mt-4">
-                            <label for="start_time" class="block font-medium text-sm text-gray-700">{{ __('Start Time') }}</label>
-                            <input id="start_time" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="time" name="start_time" value="{{ old('start_time') }}" required />
+                            <x-input-label for="start_time" :value="__('Start Time')" />
+                            <select id="start_time" name="start_time" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                                <option value="">-- Select a time --</option>
+                                @for ($h = 0; $h < 24; $h++)
+                                    @for ($m = 0; $m < 60; $m += 30)
+                                        @php $time = sprintf('%02d:%02d', $h, $m); @endphp
+                                        <option value="{{ $time }}" {{ old('start_time') == $time ? 'selected' : '' }}>
+                                            {{ $time }}
+                                        </option>
+                                    @endfor
+                                @endfor
+                            </select>
+                            <x-input-error :messages="$errors->get('start_time')" class="mt-2" />
                         </div>
 
                         <!-- End Time -->
                         <div class="mt-4">
-                            <label for="end_time" class="block font-medium text-sm text-gray-700">{{ __('End Time') }}</label>
-                            <input id="end_time" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="time" name="end_time" value="{{ old('end_time') }}" required />
+                            <x-input-label for="end_time" :value="__('End Time')" />
+                            <select id="end_time" name="end_time" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" required>
+                                <option value="">-- Select a time --</option>
+                                @for ($h = 0; $h < 24; $h++)
+                                    @for ($m = 0; $m < 60; $m += 30)
+                                        @php $time = sprintf('%02d:%02d', $h, $m); @endphp
+                                        <option value="{{ $time }}" {{ old('end_time') == $time ? 'selected' : '' }}>
+                                            {{ $time }}
+                                        </option>
+                                    @endfor
+                                @endfor
+                            </select>
+                            <x-input-error :messages="$errors->get('end_time')" class="mt-2" />
                         </div>
-
-                        <!-- Additional Notes (Optional) -->
-                        {{-- <div class="mt-4">
-                            <label for="notes" class="block font-medium text-sm text-gray-700">{{ __('Additional Notes (optional)') }}</label>
-                            <textarea id="notes" name="notes" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">{{ old('notes') }}</textarea>
-                        </div> --}}
 
                         <div class="flex items-center justify-end mt-6">
                              <a href="{{ route('bookings.index') }}" class="underline text-sm text-gray-600 hover:text-gray-900 mr-4">
@@ -73,4 +89,5 @@
             </div>
         </div>
     </div>
+   
 </x-app-layout>

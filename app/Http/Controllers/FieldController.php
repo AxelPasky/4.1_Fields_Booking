@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Field;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreFieldRequest;
+use App\Services\FieldService; // <-- Importa il nuovo service
 
 class FieldController extends Controller
 {
@@ -14,8 +14,7 @@ class FieldController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Field::class);
-        $fields = Field::latest()->paginate(10);
-        return view('fields.index', compact('fields'));
+        return view('fields.index');
     }
 
     /**
@@ -30,25 +29,19 @@ class FieldController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreFieldRequest $request, FieldService $fieldService)
     {
-        $this->authorize('create', Field::class);
-
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price_per_hour' => 'required|numeric|min:0',
-            'image_path' => 'nullable|string|max:255', // Se usi l'upload, questo cambierà
-            'is_available' => 'sometimes|boolean',
-        ]);
-
-        // Gestisce correttamente il valore del checkbox 'is_available'
+        $validatedData = $request->validated();
         $validatedData['is_available'] = $request->has('is_available');
 
-        Field::create($validatedData);
+        // Passiamo anche il file immagine, se presente
+        if ($request->hasFile('image')) {
+            $validatedData['image'] = $request->file('image');
+        }
 
-        return redirect()->route('fields.index')
-                         ->with('success', 'Field created successfully.');
+        $fieldService->createField($validatedData);
+
+        return redirect()->route('fields.index')->with('success', 'Field created successfully.');
     }
 
     /**
@@ -72,42 +65,30 @@ class FieldController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Field $field)
+    public function update(StoreFieldRequest $request, Field $field, FieldService $fieldService)
     {
-        $this->authorize('update', $field);
-
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price_per_hour' => 'required|numeric|min:0',
-            'image_path' => 'nullable|string|max:255',
-            'is_available' => 'sometimes|boolean',
-        ]);
-
+        $validatedData = $request->validated();
         $validatedData['is_available'] = $request->has('is_available');
 
-        $field->update($validatedData);
+        if ($request->hasFile('image')) {
+            $validatedData['image'] = $request->file('image');
+        }
 
-        return redirect()->route('fields.index')
-                         ->with('success', 'Field updated successfully.');
+        $fieldService->updateField($field, $validatedData);
+
+        return redirect()->route('fields.index')->with('success', 'Field updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Field $field)
+    public function destroy(Field $field, FieldService $fieldService)
     {
         $this->authorize('delete', $field);
 
-        // Impedisce la cancellazione se il campo ha prenotazioni associate
-        if ($field->bookings()->exists()) {
-            return redirect()->route('fields.index')
-                             ->with('error', 'Cannot delete this field because it has existing bookings.');
-        }
-
-        $field->delete();
+        $fieldService->deleteField($field);
 
         return redirect()->route('fields.index')
-                         ->with('success', 'Field deleted successfully.');
+                         ->with('success', 'Field and all its associated bookings have been deleted successfully.');
     }
 }
