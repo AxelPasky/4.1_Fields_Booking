@@ -11,11 +11,33 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            #background-video {
+                position: fixed;
+                right: 0;
+                bottom: 0;
+                min-width: 100%;
+                min-height: 100%;
+                width: auto;
+                height: auto;
+                z-index: -100;
+                background-size: cover;
+            }
+        </style>
     </head>
     <body class="antialiased">
-        <div class="relative min-h-screen flex flex-col items-center justify-center bg-gray-100 text-gray-800">
-            
-            {{-- Main Content --}}
+        <!-- Background Video -->
+        <video autoplay loop muted playsinline id="background-video">
+            <source src="{{ asset('videos/background-video.mp4') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <!-- Overlay -->
+        <div class="fixed top-0 left-0 w-full h-full bg-black opacity-50 z-[-50]"></div>
+
+        <!-- Main Content -->
+        <div class="relative min-h-screen flex flex-col items-center justify-center text-white">
             <div class="text-center p-6 max-w-2xl mx-auto">
                 <!-- Logo -->
                 <div class="flex justify-center mb-6">
@@ -30,7 +52,7 @@
                 </h1>
 
                 <!-- Sub-headline -->
-                <p class="mt-4 text-lg text-gray-600">
+                <p class="mt-4 text-lg text-gray-200">
                     The easiest way to manage and book sports fields. Check availability in real-time and get instant confirmations.
                 </p>
 
@@ -39,14 +61,14 @@
                     <a href="{{ route('login') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-brand-green-600 hover:bg-brand-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green-500">
                         Log In
                     </a>
-                    <a href="{{ route('register') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-green-500">
+                    <a href="{{ route('register') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-brand-yellow-500 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-yellow-500">
                         Register
                     </a>
                 </div>
             </div>
 
             {{-- Footer --}}
-            <footer class="absolute bottom-0 left-0 right-0 p-4 text-center text-sm text-gray-500">
+            <footer class="absolute bottom-0 left-0 right-0 p-4 text-center text-sm text-gray-300">
                 &copy; {{ date('Y') }} {{ config('app.name', 'Laravel') }}. All rights reserved.
             </footer>
         </div>

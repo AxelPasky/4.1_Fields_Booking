@@ -36,26 +36,20 @@ class FieldController extends Controller
         $this->authorize('create', Field::class);
 
         $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'name' => 'required|string|max:255|unique:fields',
             'price_per_hour' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validazione immagine
-            'is_available' => 'sometimes|boolean',
+            'is_available' => 'sometimes|boolean', // Aggiungiamo la validazione
         ]);
 
-        // Gestisce correttamente il valore del checkbox 'is_available'
-        $validatedData['is_available'] = $request->has('is_available');
+        // Creiamo il campo usando i dati validati
+        Field::create([
+            'name' => $validatedData['name'],
+            'price_per_hour' => $validatedData['price_per_hour'],
+            // Se il checkbox è spuntato, il request avrà 'is_available'. Altrimenti no.
+            'is_available' => $request->has('is_available'),
+        ]);
 
-        if ($request->hasFile('image')) {
-            // Salva il file in storage/app/public/fields e ottieni il percorso
-            $path = $request->file('image')->store('fields', 'public');
-            $validatedData['image'] = $path;
-        }
-
-        Field::create($validatedData);
-
-        return redirect()->route('fields.index')
-                         ->with('success', 'Field created successfully.');
+        return redirect()->route('fields.index')->with('success', 'Field created successfully.');
     }
 
     /**

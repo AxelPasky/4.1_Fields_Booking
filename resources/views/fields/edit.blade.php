@@ -57,22 +57,23 @@
                             @endif
                         </div>
 
-                        <!-- Hourly Rate -->
+                        <!-- Price Per Hour -->
                         <div class="mt-4">
-                            <label for="price_per_hour" class="block font-medium text-sm text-gray-700">{{ __('Price per Hour (€)') }}</label>
-                            <input id="price_per_hour" class="block mt-1 w-full rounded-md shadow-sm border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" type="number" name="price_per_hour" value="{{ old('price_per_hour', $field->price_per_hour) }}" required step="0.01" min="0" />
+                            <x-input-label for="price_per_hour" :value="__('Price per Hour (€)')" />
+                            <x-text-input id="price_per_hour" class="block mt-1 w-full" type="number" name="price_per_hour" :value="old('price_per_hour', $field->price_per_hour)" required min="0" step="0.01" />
+                            <x-input-error :messages="$errors->get('price_per_hour')" class="mt-2" />
                         </div>
 
-                        <!-- Is Available -->
+                        <!-- Is Available Checkbox -->
                         <div class="block mt-4">
                             <label for="is_available" class="inline-flex items-center">
-                                <input id="is_available" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" name="is_available" value="1" {{ old('is_available', $field->is_available) ? 'checked' : '' }}>
-                                <span class="ml-2 text-sm text-gray-600">{{ __('Available') }}</span>
+                                <input id="is_available" type="checkbox" class="rounded border-gray-300 text-brand-green-600 shadow-sm focus:ring-brand-green-500" name="is_available" value="1" {{ old('is_available', $field->is_available) ? 'checked' : '' }}>
+                                <span class="ms-2 text-sm text-gray-600">{{ __('Available for booking') }}</span>
                             </label>
                         </div>
 
-                        <div class="flex items-center justify-end mt-6">
-                            <a href="{{ route('fields.show', $field) }}" class="underline text-sm text-gray-600 hover:text-gray-900 mr-4">
+                        <div class="flex items-center justify-end mt-4">
+                            <a href="{{ route('fields.index') }}" class="text-sm text-gray-600 hover:text-gray-900 mr-4">
                                 {{ __('Cancel') }}
                             </a>
 
