@@ -4,23 +4,23 @@ A modern web application built with the Laravel framework for managing and booki
 
 ## Key Features
 
+-   **Clean & Scalable Architecture:** Implements a multi-layered architecture using a Service Layer, Form Requests, and Policies to ensure a strong separation of concerns and high-quality, maintainable code.
 -   **User Authentication:** Secure registration, login, and password reset functionality.
--   **Role-Based Access Control:** Distinct roles for regular users and administrators.
+-   **Role-Based Access Control:** Distinct roles for regular users and administrators, managed via dedicated Policy classes.
     -   **Admins:** Can perform full CRUD (Create, Read, Update, Delete) operations on sports fields.
-    -   **Users:** Can view available fields, create, view, and cancel their own bookings.
+    -   **Users:** Can view available fields, create, view, and cancel their own future bookings.
 -   **Field Management (Admin):**
     -   Dynamic, real-time search for fields.
-    -   Create, edit, and delete fields, including details like name, type, price, description, and availability status.
-    -   Image upload for each field.
+    -   Create, edit, and delete fields, including details like name, type, price, description, and image uploads.
 -   **Booking Management (User):**
-    -   Intuitive form for booking fields with robust date and time validation to prevent conflicts and invalid entries.
+    -   Intuitive form for booking fields with robust, server-side validation to prevent conflicts and invalid entries.
     -   Personal dashboard (`My Bookings`) to view and manage all personal bookings.
 -   **Email Notifications:**
-    -   Automatic email notifications are sent to users when their booking is cancelled due to a field being deleted by an admin.
+    -   Automatic email notifications for booking creation, updates, and cancellations.
 -   **Modern Frontend:**
     -   Responsive design built with Tailwind CSS.
     -   Dynamic UI components powered by Livewire 3 for a seamless, single-page application feel.
-    -   Custom, professional landing page with a video background.
+    -   Modular JavaScript managed via Vite.
 
 ## Tech Stack
 
@@ -28,6 +28,18 @@ A modern web application built with the Laravel framework for managing and booki
 -   **Frontend:** Livewire 3, Tailwind CSS, Alpine.js
 -   **Database:** MySQL
 -   **Development Tools:** Vite, Composer, NPM
+
+## Project Architecture
+
+This application follows a clean, multi-layered architecture to ensure a strong separation of concerns, making the codebase scalable, maintainable, and easy to test.
+
+-   **Controllers (`app/Http/Controllers`):** Act as the entry point for HTTP requests. Their sole responsibility is to orchestrate the flow of data, calling the appropriate services and returning an HTTP response. They contain no business logic.
+-   **Service Layer (`app/Services`):** This is the core of the application's business logic. Classes like `BookingService` and `FieldService` encapsulate all the complex operations (e.g., calculating prices, handling file uploads, sending notifications), ensuring this logic is reusable and decoupled from the HTTP layer.
+-   **Form Requests (`app/Http/Requests`):** Handle all validation and authorization logic for incoming requests. This keeps the controllers clean and focused, as the request is already validated and authorized before it even reaches the controller's method.
+-   **Policies (`app/Policies`):** Define the authorization rules for specific models (e.g., who can update or delete a booking). This provides a granular and centralized way to manage user permissions.
+-   **Eloquent Models (`app/Models`):** Represent the data layer, managing the interaction with the database.
+
+This structure ensures that each part of the application has a single, well-defined responsibility.
 
 ---
 
@@ -69,13 +81,7 @@ php artisan key:generate
 
 Next, open the `.env` file and configure your database connection details (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
 
-For local email testing, it is recommended to use [Mailpit](https://github.com/axllent/mailpit). The `.env` file is already configured for it by default:
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=127.0.0.1
-MAIL_PORT=1025
-```
+For local email testing, it is recommended to use [Mailpit](https://github.com/axllent/mailpit). The `.env` file is already configured for it by default.
 
 ### 4. Database Migration and Seeding
 
