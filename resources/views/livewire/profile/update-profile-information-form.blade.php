@@ -25,22 +25,20 @@ new class extends Component
      */
     public function updateProfileInformation(): void
     {
-        $user = Auth::user();
-
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'email' => ['required', 'string', 'lowercase', 'email:filter', 'max:255', Rule::unique(User::class)->ignore($this->user->id)],
         ]);
 
-        $user->fill($validated);
+        $this->user->fill($validated);
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
+        if ($this->user->isDirty('email')) {
+            $this->user->email_verified_at = null;
         }
 
-        $user->save();
+        $this->user->save();
 
-        $this->dispatch('profile-updated', name: $user->name);
+        $this->dispatch('profile-updated', name: $this->user->name);
     }
 
     /**
