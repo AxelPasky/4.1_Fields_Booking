@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('fields', function (Blueprint $table) {
-            $table->string('location')->nullable(); // La ri-aggiunge se fai un rollback
+            $table->string('location')->nullable(); 
         });
     }
 };
