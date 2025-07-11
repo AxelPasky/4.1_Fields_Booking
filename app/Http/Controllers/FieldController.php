@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Field;
 use App\Http\Requests\StoreFieldRequest;
-use App\Services\FieldService; // <-- Importa il nuovo service
+use App\Services\FieldService;
 
 class FieldController extends Controller
 {
