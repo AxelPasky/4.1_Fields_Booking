@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Field;
+use App\Models\Booking;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -29,5 +30,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Field::factory(5)->create();
+
+       
+        Booking::factory(20)->create();
     }
 }
